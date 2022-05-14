@@ -1,0 +1,148 @@
+---
+title: " Homework 5 - QF 202: Intro to Time Series"
+author: "Brennan Hall"
+date: "May 1, 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(quantmod)
+library(tseries)
+library(timeSeries)
+library(forecast)
+# install.packages(orcutt)
+library(orcutt)
+library(TSA)
+```
+
+# Problem 1. ARIMA seasonal model (50 points)
+
+Simulate 500 observations for an ARIMA seasonal model. The model includes a nonseasonal AR(1) term, a seasonal AR(1) term, no differencing, no MA terms and the seasonal period is S = 12. 
+
+```{r}
+set.seed(123)
+
+set.seed(123)
+model_gen <- Arima(ts(rnorm(500,sd=sqrt(0.01)),freq=12), 
+                   order=c(1,0,0), 
+                   seasonal=c(1,0,0),
+                   fixed=c(phi=0.3, Phi=0.3, mu=0)
+)
+data_generate <- simulate(model_gen, nsim=500)
+```
+
+## (a) Please display the ACF and PACF plots obtained using the generated data
+
+```{r}
+acf(as.numeric(data_generate), lag.max = 64)
+pacf(as.numeric(data_generate), lag.max = 64)
+```
+
+
+## (b) Perform a unit root test on the data and explain your finding.
+```{r}
+adf.test(data_generate)
+```
+
+## (c) Using the AIC criterion to find the best order of a model fitting the data. Assume you try the airplane model as well as the model below and to have multiple S values in the loop. That is please try bimonthly, quarterly, semiannual, annual, and bi-annual effects.
+
+
+```{r, include=FALSE, eval=FALSE}
+# define max order
+ma.order.parameter <- 0
+ar.order.parameter <- seq(1, 2)
+S_value.parameter <- c(2, 4, 6, 12, 24)
+
+parameters.list <- expand.grid(p = ar.order.parameter, d=0, q=ma.order.parameter, S=S_value.parameter)
+# parameters.list <- rbind(c(0,0,0,1), parameters.list)
+parameters.list <- as.data.frame(t(parameters.list))
+parameters.list <- as.list(parameters.list)
+
+# define aic function
+get.arma.aic <- function(inputs) {
+  arima(data_generate, order=inputs[1:3],
+        seasonal=list(order=inputs[1:3], period=inputs[4]))
+}
+
+# calculate aic
+arma.aic.vec <- sapply(parameters.list, get.arma.aic)
+
+# show the best ARMA
+selected_parameters <- parameters.list[[which.min(arma.aic.vec)]]
+selected_parameters
+
+best_model <- arima(data_generate, order=selected_parameters[1:3],
+        seasonal=list(order=selected_parameters[1:3], period=selected_parameters[4]))
+best_model
+```
+
+```{r}
+# or
+auto.arima(data_generate, d=0, D=0, max.p = 5, max.q = 0, trace=FALSE, seasonal = TRUE, ic = c("aic"))
+```
+
+## (d) Please use the optimal order you find in question 1.(c) to fit the model. Obtain diagnostics plots. Then compare the estimates with the original parameters used to generate the model.
+
+```{r}
+# Fit model with the optimal order
+fit2 <- arima(data_generate, order=c(2,0,0), seasonal=list(order=c(2,0,0), period=12), method = c("CSS"))
+
+# # Show diagnostics plots
+tsdiag(fit2)
+
+# # Fit model with the original parameters
+fit1 <- arima(data_generate, order=c(1,0,0), seasonal=list(order=c(1,0,0), period=12))
+
+# Compare the estimates
+# fit1 # Original
+# fit2 # Optimal order
+```
+**Answer:** _The original order shows a better AIC value_
+
+# Problem 2. Regression with time series and ARIMAX (50 points)
+
+Download daily equity trade data for Coca Cola (KO) and Pepsi (PEP) from January 2017 to Dec 2019 and calculate the log returns (using the adjusted close price).
+
+```{r}
+# Get Coca Cola (KO) data from January 2017 to Dec 2019
+getSymbols(c("KO"), from ="2017-01-01", to="2019-12-31")
+
+# Calculate the log returns using adjusted close price
+returnsKO <- dailyReturn(KO$KO.Adjusted, type = "log")
+returnsKO <- as.ts(returnsKO)
+
+# Get Pepsi (PEP) data from January 2017 to Dec 2019
+getSymbols(c("PEP"), from ="2017-01-01", to="2019-12-31")
+
+# Calculate the log returns using adjusted close price
+returnsPEP <- dailyReturn(PEP$PEP.Adjusted, type = "log")
+returnsPEP <- as.ts(returnsPEP)
+```
+
+## (a) We want to use the return of Pepsi to explain the return of Coca. Please perform regression with time series errors on these two time series. To this end, fit the data using the CochranOrcutt procedure.
+
+```{r}
+fitKO <-cochrane.orcutt(lm(returnsKO~returnsPEP))
+summary(fitKO)
+```
+
+## (b) Fit an ARIMAX model for KO with PEP as explanatory variable.
+
+```{r}
+# Obtain the AR parameters to estimate the ARIMAX
+auto.arima(returnsKO, max.q = 0)
+```
+
+
+```{r}
+arimax_fit <- arimax(returnsKO, order=c(2,0,0),
+                     xtransf=returnsPEP,
+                     transfer=list(c(1,1)))
+summary(arimax_fit)
+```
+
+## (c) Please comment on your findings.

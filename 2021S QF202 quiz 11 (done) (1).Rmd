@@ -1,0 +1,67 @@
+---
+title: "QF 202 Quiz 11"
+date: "4/14/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load libraries
+library(quantmod)
+library(forecast)
+```
+
+# Question 1
+
+Download stock price data for AAPL (AAPL) from 2021-01-01 to 2021-12-31 and calculate log return sequence using `dailyReturn` function .
+
+```{r}
+getSymbols('AAPL', from = "2021-01-01", to = "2021-12-31", src = "yahoo")
+head(AAPL)
+```
+```{r}
+ret <- dailyReturn(AAPL, type = "log")
+head(ret)
+```
+
+
+# 2. Use brute force method to select the best fitted ARMA model
+```{r}
+# define max order
+ma.order.vec <- seq(1, 3)
+ar.order.vec <- seq(1, 3)
+
+arma.order.list <- expand.grid(p = ar.order.vec, d=0, q=ma.order.vec)
+arma.order.list <- rbind(c(0,0,0), arma.order.list)
+arma.order.list <- as.data.frame(t(arma.order.list))
+arma.order.list <- as.list(arma.order.list)
+
+# define aic function
+get.arma.aic <- function(order) arima(ret,order=order)$aic
+
+# calculate aic
+arma.aic.vec <- sapply(arma.order.list, get.arma.aic)
+
+# show the best ARMA
+selected_order <- arma.order.list[[which.min(arma.aic.vec)]]
+selected_order
+
+best_model <- arima(ret, order = selected_order)
+best_model
+```
+
+```{r}
+# or
+forecast::auto.arima(ret, d=0, max.p = 5, max.q = 5, trace=FALSE, ic = c("aic"))
+```
+
+
+# 3. Using the models you evaluated in problem 2, please forecast the return for: 5 days. Write down the expected return of the 5th day. 
+
+```{r}
+forecast(ret, model=best_model, h=5)
+```
+*The expected return of the 5th day is 0.001525*
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

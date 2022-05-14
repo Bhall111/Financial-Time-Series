@@ -1,0 +1,217 @@
+---
+title: "HW3 - Introduction to Financial Time Series"
+author: "Brennan Hall"
+date: "03/20/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("forecast")
+```
+
+# Problem 1
+
+Please download the attached data (T-notes.csv).
+
+```{r}
+# Load the Data
+t.notes <- read.csv("T-notes.csv",header=T, row.names = 1)
+
+# Put in the right order
+t.notes <- t.notes[nrow(t.notes):1,]
+
+```
+## (a) Simple return and Split the data
+
+```{r}
+# Calculate the daily simple return
+t.notes.ret <- diff(t.notes)/ t.notes[-length(t.notes)]
+
+# Split the result into two separate subsets.
+# The first one (DATA 1) contains the first 200 daily returns.
+n <- length(t.notes.ret)
+data1 <- t.notes.ret[1:200]
+
+# The second subset (DATA 2) contains the remaining daily returns
+data2 <- t.notes.ret[201:n]
+```
+
+## (b) ACF
+```{r}
+# Create an ACF plot usinf the T-notes return in DATA 1
+acf(data1, lag.max = 20)
+# Report the values of the first 20 lags of autocorrelation.
+acf(data1, lag.max = 20, plot = FALSE)
+```
+
+## (c) PACF
+```{r}
+# Use the PACF function to plot the partial autocorrelations using DATA 1. 
+pacf(data1)
+
+# Based on the plots what is the recommended order p if we want to fit an AR(p)
+# model on DATA 1.
+
+# AR(1) or AR(4) could be good.
+```
+
+## (d) Fit mode1 using the ARIMA function
+```{r}
+# Use the ARIMA function and the order p you determined in previous problem fit
+# an AR(p) model on DATA 1. Name this fitted model as MODEL 1.
+
+# AR(1)
+model1 <- arima(data1, order=c(1,0,0), include.mean = F)
+model1
+```
+
+## (e) Fit model2 using ar() function
+```{r}
+# Use the builtin function ar() and your preferred criteria to fit another AR
+# model on DATA 1. Name this fitted model as MODEL 2.
+model2 <- ar(data1, aic = TRUE)
+model2
+```
+
+## (f) Predict the daily returns for the next 20 days
+```{r}
+# For each model, predict the daily returns for the next 20 days.
+predict(model1, n.ahead = 20)
+predict(model2, n.ahead = 20)
+# forecast(model1, 20, level = c(90, 95))
+# forecast(model2, 20, level = c(90, 95))
+
+# Plot MODEL 1 predicted values following the original values in DATA 1.
+plot(forecast(model1, n.ahead = 20), xlim =c(150, 210))
+
+# Plot MODEL 2 predicted values following the original values in DATA 1.
+plot(forecast(model2, n.ahead = 20), xlim =c(150, 210))
+```
+
+## (g) MSE
+```{r}
+# Using DATA 2, compute the mean squared error (MSE) for each AR model you constructed.
+
+# h.ahead <- length(data2)
+h.ahead <- 20
+
+model1.pred <- predict(model1, n.ahead = h.ahead)$pred
+model2.pred <- predict(model2, n.ahead = h.ahead)$pred
+
+model1.mse <- mean((as.vector(model1.pred) - data2[1:h.ahead])^2)
+model2.mse <- mean((as.vector(model2.pred) - data2[1:h.ahead])^2)
+
+# Compare the MSE values for the models.
+model1.mse
+model2.mse
+
+# It seems that the model 1 is better, since has smaller MSE.
+```
+
+# Problem 2
+
+## (a) Calculate the theoretical autocorrelation values for these models.
+
+```{r}
+# MA(1) using the given formula
+.7 / (1+.7^2)
+
+# Using ARMAacf function
+ARMAacf(ma=0.7)[2]
+
+# # Plot the theoretical autocorrelation value
+# barplot(ARMAacf(ma=0.7,lag.max=12)[-1],main = "ACF of ma(1)")
+```
+
+```{r}
+# MA(2) using the given formula
+(.5 + .5*.3)/(1+.5^2+.3^2) # p1
+(.3)/(1+.5^2+.3^2) # p2
+
+# Using ARMAacf function
+ARMAacf(ma=c(0.5,0.3))[2:3]
+
+# # Plot the theoretical autocorrelation value
+# barplot(ARMAacf(ma=c(0.5,0.3),lag.max=12)[-1],main = "ACF of ma(2)")
+```
+
+## (b) Using arima.sim() function to generate 5000 data points of corresponding MA(1) model and
+calculate the ACF value for this data set.
+```{r}
+data_generate1 <- arima.sim(list(ma =0.7), n = 5000)
+s1 <- acf(data_generate1, lag=15) # Obtain the ACF plot and more.
+s1$acf[-1]
+```
+## (c) Using arima.sim() function to generate 5000 data points of corresponding MA(2) model and
+calculate the ACF value for this data set.
+```{r}
+data_generate2 <- arima.sim(list(ma =c(0.5, 0.3)), n = 5000)
+s2 <- acf(data_generate2, lag=15) # Obtain the ACF plot and more.
+s2$acf[-1]
+```
+
+## (d) Present a table with the theoretical values and estimated values. Comment on what you observe.
+```{r}
+data.frame(
+  Theoretical_MA1=ARMAacf(ma=0.7, lag.max = 10)[-1],
+  Estimated_MA1=s1$acf[2:11],
+  Theoretical_MA2=ARMAacf(ma=c(0.5,0.3), lag.max = 10)[-1],
+  Estimated_MA2=s2$acf[2:11]
+)
+# We can see that the estimated values is very near the theoretical values.
+```
+# BONUS
+
+The values above are for n = 5000. Repeat the procedure for a series of n values and study
+the differences between the real and estimated values as a function of n. In your opinion what
+is the order of this function. That is, how does this difference goes to 0 as n goes to infinite
+
+```{r}
+n_sim = 50
+data_generate1 <- arima.sim(list(ma =0.7), n = n_sim)
+s1 <- acf(data_generate1, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data_generate2 <- arima.sim(list(ma =c(0.5, 0.3)), n = n_sim)
+s2 <- acf(data_generate2, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data.frame(
+  Theoretical_MA1=ARMAacf(ma=0.7, lag.max = 10)[-1],
+  Estimated_MA1=s1$acf[2:11],
+  Theoretical_MA2=ARMAacf(ma=c(0.5,0.3), lag.max = 10)[-1],
+  Estimated_MA2=s2$acf[2:11]
+)
+
+n_sim = 500
+data_generate1 <- arima.sim(list(ma =0.7), n = n_sim)
+s1 <- acf(data_generate1, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data_generate2 <- arima.sim(list(ma =c(0.5, 0.3)), n = n_sim)
+s2 <- acf(data_generate2, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data.frame(
+  Theoretical_MA1=ARMAacf(ma=0.7, lag.max = 10)[-1],
+  Estimated_MA1=s1$acf[2:11],
+  Theoretical_MA2=ARMAacf(ma=c(0.5,0.3), lag.max = 10)[-1],
+  Estimated_MA2=s2$acf[2:11]
+)
+
+n_sim = 1000
+data_generate1 <- arima.sim(list(ma =0.7), n = n_sim)
+s1 <- acf(data_generate1, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data_generate2 <- arima.sim(list(ma =c(0.5, 0.3)), n = n_sim)
+s2 <- acf(data_generate2, lag=15, plot = FALSE) # Obtain the ACF plot and more.
+data.frame(
+  Theoretical_MA1=ARMAacf(ma=0.7, lag.max = 10)[-1],
+  Estimated_MA1=s1$acf[2:11],
+  Theoretical_MA2=ARMAacf(ma=c(0.5,0.3), lag.max = 10)[-1],
+  Estimated_MA2=s2$acf[2:11]
+)
+
+# As n goes from 0 to infinite we can see that the estimated values is more
+# closer to the theoretical values.
+```
+
+
+

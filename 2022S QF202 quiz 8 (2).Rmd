@@ -1,0 +1,49 @@
+---
+title: "QF 202 Quiz 8"
+date: "3/9/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(2022)
+
+library(forecast)
+```
+
+# Question 1
+
+1. Please analyze the following code. Run the code to generate a sequence of length = 10000. 
+
+```{r}
+n = 10000
+a<-rnorm(n)
+r<-vector(length=n)
+r[1]=r[2]=0
+for (t in 3:n) {
+  r[t] = 0.5*r[t-1]+0.4*r[t-2]+a[t]
+}
+```
+
+Please write down in the provided space the name of the model, its formula dynamics using the numerical values of the parameters.
+
+The model is ar2 model, and its formula dynamics prints out an accurate estimation of the distribution of those models. This is based on the n number of points within the distribution.
+
+
+
+2. Fit the data to the model using `arima()` function, and the proper order. Display the results from `tsdiag()` and state your observations.
+```{r}
+model_5000.ar2 <- arima(r, order=c(2,0,0), include.mean = F)
+
+ 
+tsdiag(model_5000.ar2)
+```
+
+3. Output 5-step prediction using the estimated model. 
+
+```{r}
+predict(r,5)
+```
+
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

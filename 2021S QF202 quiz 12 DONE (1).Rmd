@@ -1,0 +1,40 @@
+---
+title: "QF 202 Quiz 12"
+date: "4/21/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(quantmod)
+library(tseries)
+library(tseries)
+library(timeSeries)
+library(readr)
+library(forecast)
+```
+
+# Question 1
+
+Download data for stock MSFT from 2017-01-01 to 2020-01-01 and calculate the log returns using adjusted close price. Use the procedure we introduced in the class to apply ADF test on the log return sequence.
+
+```{r}
+# Get MSFT data from 2017-01-01 to 2020-01-01
+getSymbols(c("MSFT"), from ="2017-01-01", to="2020-01-01")
+
+# Calculate the log returns using adjusted close price
+prices <- MSFT$MSFT.Adjusted
+returns <- dailyReturn(MSFT$MSFT.Adjusted, type = "log")
+
+# Apply ADF test on the log return sequence
+adf.test(returns)
+par(mfrow = c(1, 2))
+acf(returns)
+pacf(returns)
+```
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

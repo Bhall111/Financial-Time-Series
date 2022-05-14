@@ -1,0 +1,53 @@
+---
+title: "QF 202 Quiz 9"
+date: "4/7/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(quantmod)
+library(runner)
+```
+
+# Question 1
+
+Download stock price data for Apple (AAPL) from 2021-01-01 to 2021-12-31 and calculate log return sequence using `dailyReturn` function .
+
+```{r}
+getSymbols('AAPL', from = "2021-01-01", to = "2021-12-31", src = "yahoo")
+head(AAPL)
+```
+```{r}
+AAPL_log_returns <- dailyReturn(AAPL, type = "log")
+head(AAPL_log_returns)
+```
+
+# Question 2
+
+Using expanding window to calculate the average of log return of AAPL.
+```{r}
+average_expanding_window <- runner(
+  AAPL_log_returns$daily.returns,
+  f = mean
+)
+AAPL_log_returns <- cbind(AAPL_log_returns, average_expanding_window)
+head(AAPL_log_returns)
+```
+
+
+# Question 3
+
+Using rolling window to calculate the average of log return of AAPL with window size = 6
+
+```{r}
+average_rolling_window6 <- runner(
+  AAPL_log_returns$daily.returns,
+  k = 6,
+  f = mean
+)
+AAPL_log_returns <- cbind(AAPL_log_returns, average_rolling_window6)
+head(AAPL_log_returns,20)
+```
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

@@ -1,0 +1,55 @@
+---
+title: "QF 202 Quiz 13"
+date: "3/3/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(2021)
+```
+
+```{r}
+library(fBasics)
+library(TSA)
+library(dplyr)
+library(quantmod)
+library(orcutt)
+library(nlme)
+```
+
+# Question 1
+
+1.  Please download data and calculate returns for Facebook (FB) and Technology ETF (XLK). Then we do an ARIMAX regression using returns of FB as the response variable and using returns of XLK as an explanatory variable. The model is assumed as the following:
+
+$$ \Phi(L) y\_{t}=\beta*{0+}* \beta*w{1} x*{t}+a{t}\\$$
+
+$$\Phi*{L}=1-*\phi{1} L$$ where $a_{t}$ is a white noise sequence.
+
+```{r}
+# get stock data
+getSymbols("FB", from="2015-01-01")
+getSymbols("XLK", from="2015-01-01")
+
+
+# calculate return
+return_FB <- (Cl(FB)-Op(FB)) / Op(FB) 
+return_TechETF <- (Cl(XLK)-Op(XLK)) / Op(XLK) 
+```
+
+Use arimax() function to fit the model
+
+```{r}
+arimax_fit <- arimax(return_FB, order=c(1,0,0),
+                     xtransf=return_TechETF,
+                     transfer=list(c(1,1)))
+arimax_fit
+```
+
+2.  Write down the summary of the regression
+
+```{r}
+summary(arimax_fit)
+```
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!
