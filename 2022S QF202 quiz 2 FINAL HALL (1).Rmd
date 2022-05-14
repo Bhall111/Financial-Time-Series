@@ -1,0 +1,46 @@
+---
+author: Brennan Hall
+title: "QF 202 Quiz 1"
+output: pdf_document
+---
+
+# Question 1
+
+1. Download stock price data using package `quantmod` for 'AMZN' and 'AAPL' from 2015-01-01 to  2022-01-01
+
+```{r}
+library(quantmod)
+
+name_list <- c("AMZN", "AAPL")
+getSymbols(name_list, from = "2015-01-01", to = "2022-01-01", src = "yahoo")
+
+AMZN.price <- AMZN$AMZN.Adjusted
+AAPL.price <- AAPL$AAPL.Adjusted
+```
+
+2. Calculate the covariance and correlation between the two stocks. Please make sure the output shows the results.
+
+```{r}
+cov(AMZN.price, AAPL.price)
+cor(AMZN.price, AAPL.price)
+
+```
+
+3. Please calculate the average (unconditional expectation) of the two stocks prices `AMZN` and `AAPL`
+
+```{r}
+mean(AMZN.price) # unconditional
+mean(AAPL.price) # unconditional
+```
+
+4. Calculate the conditional expectation of `AMZN` given AAPL stock price lager than its average (conditional expectation)
+
+```{r}
+mean(AMZN.price[AAPL.price > mean(AAPL.price)]) # conditional
+```
+
+5. compare the unconditional expectation with the conditional one (what you got from q3), and interpret your finding.
+
+Answer: You can say that they are related based on the conditional findings that Amazon mean stock price would be greater in the conditional setting of Apple stock price also being greater when compared to the unconditional data. 
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

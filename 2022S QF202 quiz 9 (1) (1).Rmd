@@ -1,0 +1,40 @@
+---
+title: "QF 202 Quiz 9"
+date: "3/23/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(2022)
+```
+
+# Question 1
+
+1. Please analyze the following code. Run the code to generate a sequence of length = 10000. 
+
+```{r}
+n = 1000
+epsilon=rnorm(n,sd=1)
+rt = epsilon[-1]-0.4*epsilon[-n]
+```
+
+Please write down in the provided space the name of the model, its formula dynamics using the numerical values of the parameters.
+
+
+
+
+
+2. Fit the rt data to a model using the `arima()` function. Please use the order you determined in part 1 or use the appropriate diagnostic plots to find a proper order. Display the results from `tsdiag()` and state your observations.
+```{r}
+
+```
+
+3. Output a 5-step prediction using the estimated model. You can provide either a plot or the forecast values.
+
+```{r}
+
+```
+
+
+# Do not forget to compile the source file to a report before you submit it on Canvas!

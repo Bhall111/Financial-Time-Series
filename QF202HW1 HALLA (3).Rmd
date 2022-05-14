@@ -1,0 +1,57 @@
+---
+author: "Brennan Hall"
+title: "QF202HW1"
+output: pdf_document
+---
+
+Problem 1:
+a. The expected return for stock A is 2.4%
+   The expected return for stock B is 1.8%
+   The expected return for stock C is -2.285%
+   
+b. The variance for stock A is .0019444
+   The variance for stock B is .000336
+   The variance for stock C is .227672
+   
+c. I would say stock A is the best option due to its overall
+highest expected return while still maintaining a moderately low variance.
+
+
+Problem 2:
+See pdf
+
+Problem 3: 
+See Below Code
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+#3 #a
+sample <- rbinom(100, 9, 1/5)
+
+#b
+mean(sample)
+
+9*(1/5)
+
+#c
+var(sample)
+(9)*(1/5)*(4/5)
+
+#d
+Exp_xy <- c()
+
+sample_size <- c()
+x <- 1
+
+for (i in seq(from = 100, to = 10000, by = 100)) {
+  sample <- rbinom(i, 9, 1/5)
+  sample_size[x] <- i
+  Exp_xy[x] <- mean(sample)
+  x = x + 1
+}
+plot(sample_size, Exp_xy)
+
+abline(a = 9*(1/5), b = 0)
+```
+
+Problem 4:
+See pdf
